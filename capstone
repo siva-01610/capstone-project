@@ -1,0 +1,62 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+traffic_df=pd.read_csv("/content/traffic_data.csv")
+import random
+
+print("Dataset Loaded Successfully!")
+print(traffic_df.head())
+
+#VEHICLE CLASS
+class Vehicle:
+    def __init__(self, width, height, pollution_factor):
+        self.x = random.randint(0, width-1)
+        self.y = random.randint(0, height-1)
+        self.emission_rate = random.uniform(0.5, 2.0) * pollution_factor
+
+    def move(self, width, height):
+        dx = random.choice([-1, 0, 1])
+        dy = random.choice([-1, 0, 1])
+        self.x = (self.x + dx) % width
+        self.y = (self.y + dy) % height
+
+#CITY SIMULATION
+class CitySimulation:
+    def __init__(self, width=20, height=20):
+        self.width = width
+        self.height = height
+        self.pollution = np.zeros((width, height))
+        self.pollution_history = []
+
+    def step(self, vehicle_count, pollution_factor):
+        vehicles = [Vehicle(self.width, self.height, pollution_factor) for _ in range(vehicle_count)]
+
+        for v in vehicles:
+            v.move(self.width, self.height)
+            self.pollution[v.x][v.y] += v.emission_rate
+
+        self.pollution *= 0.95 
+        self.pollution_history.append(np.mean(self.pollution))
+
+#RUN SIMULATION USING YOUR DATA
+sim = CitySimulation()
+
+for _, row in traffic_df.iterrows():
+    sim.step(int(row["Vehicle_Count"]), row["Pollution_Factor"])
+
+print("\nSimulation completed using YOUR dataset!")
+
+#POLLUTION TREND GRAPH
+plt.plot(traffic_df["Hour"], sim.pollution_history, marker='o')
+plt.title("Pollution Variation Based on Your Dataset")
+plt.xlabel("Hour")
+plt.ylabel("Average Pollution Level")
+plt.grid()
+plt.show()
+
+#POLLUTION HEATMAP
+plt.imshow(sim.pollution, cmap='Reds')
+plt.colorbar(label="Pollution Level")
+plt.title("Final City Pollution Heatmap")
+plt.show()
